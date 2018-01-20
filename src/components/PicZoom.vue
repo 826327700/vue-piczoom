@@ -76,9 +76,9 @@
                 this.img.onload=()=>{
                     this.rectTimesX=this.cover.offsetWidth/this.imgwrap.offsetWidth,
                     this.rectTimesY=this.cover.offsetHeight/this.imgwrap.offsetHeight
-
                     this.imgTimesX=this.img.width/this.imgwrap.offsetWidth,
                     this.imgTimesY=this.img.height/this.imgwrap.offsetHeight
+                    this.init=true
                 }
 
                 if(!this.canvas){
@@ -95,7 +95,7 @@
                     document.body.append(this.canvas)
                 }
                 this.ctx=this.canvas.getContext("2d");
-                this.init=true
+                
             },
             mousemove(e){
                 if(!this.init){
