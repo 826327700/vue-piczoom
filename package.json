@@ -1,6 +1,6 @@
 {
   "name": "vue-piczoom",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "A picture magnifier component for Vue.js 2.x",
   "author": "xiaobaozi <826327700@qq.com>",
   "private": false,
@@ -63,6 +63,6 @@
   "main": "src/components/PicZoom.vue", 
   "repository": {
     "type": "git",
-    "url": "https://github.com/yucccc/vue-pay-keyboard"
+    "url": "https://github.com/826327700/vue-piczoom"
   }
 }

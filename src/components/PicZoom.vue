@@ -102,26 +102,66 @@
                     return false
                 }
                 let _this=this
-                
-                function getXY(eve) {
-                    return {x : eve.pageX -(_this.cover.offsetWidth/2),y : eve.pageY-(_this.cover.offsetHeight/2) };
-                }
-                var oEvent = e || event;
-                var pos = getXY(oEvent);
-                
-                if(pos.x<=this.imgwrap.offsetLeft+this.imgwrap.offsetWidth-this.cover.offsetWidth&&pos.x>=this.imgwrap.offsetLeft){
-                    this.cover.style.left=pos.x+'px'
-                }
-                if(pos.y<=this.imgwrap.offsetTop+this.imgwrap.offsetHeight-this.cover.offsetHeight&&pos.y>=this.imgwrap.offsetTop){
-                    this.cover.style.top=pos.y+'px'
-                }
-                if(pos.x<=this.imgwrap.offsetLeft+this.imgwrap.offsetWidth-this.cover.offsetWidth&&pos.x>=this.imgwrap.offsetLeft&&pos.y<=this.imgwrap.offsetTop+this.imgwrap.offsetHeight-this.cover.offsetHeight&&pos.y>=this.imgwrap.offsetTop){
 
-                    this.ctx.clearRect(0,0,this.imgwrap.offsetWidth,this.imgwrap.offsetHeight);
-                    let startX=this.cover.offsetLeft-this.imgwrap.offsetLeft,
-                    startY=this.cover.offsetTop-this.imgwrap.offsetTop
-                    this.ctx.drawImage(this.img,startX*this.imgTimesX,startY*this.imgTimesY,this.img.width*this.rectTimesX,this.img.height*this.rectTimesY,0,0,this.imgbox.offsetWidth,this.imgbox.offsetHeight);
+                //获取实际的offset
+                function offset(curEle){
+                    var totalLeft = null,totalTop = null,par = curEle.offsetParent;
+                    //首先加自己本身的左偏移和上偏移
+                    totalLeft+=curEle.offsetLeft;
+                    totalTop+=curEle.offsetTop
+                    //只要没有找到body，我们就把父级参照物的边框和偏移也进行累加
+                    while(par){
+                        if(navigator.userAgent.indexOf("MSIE 8.0")===-1){
+                        //累加父级参照物的边框
+                        totalLeft+=par.clientLeft;
+                        totalTop+=par.clientTop
+                        }
+                        
+                        //累加父级参照物本身的偏移
+                        totalLeft+=par.offsetLeft;
+                        totalTop+=par.offsetTop
+                        par = par.offsetParent;
+                    }
+                
+                    return{
+                        left:totalLeft,
+                        top:totalTop
+                    }
                 }
+
+                function getXY(eve) {
+                    return {
+                        x : eve.clientX -(_this.cover.offsetWidth/2),
+                        y : eve.clientY-(_this.cover.offsetHeight/2) 
+                    };
+                }
+                let oEvent = e || event;
+                let pos = getXY(oEvent);
+                let imgwrap=offset(this.imgwrap)
+                let range={
+                    minX:imgwrap.left,
+                    maxX:imgwrap.left+this.imgwrap.offsetWidth-this.cover.offsetWidth,
+                    minY:imgwrap.top-document.documentElement.scrollTop,
+                    maxY:imgwrap.top-document.documentElement.scrollTop+this.imgwrap.offsetHeight-this.cover.offsetHeight,
+                }
+                if(pos.x>range.maxX){
+                    pos.x=range.maxX
+                }
+                if(pos.x<range.minX){
+                    pos.x=range.minX
+                }
+                if(pos.y>range.maxY){
+                    pos.y=range.maxY
+                }
+                if(pos.y<range.minY){
+                    pos.y=range.minY
+                }
+                this.cover.style.left=pos.x+'px'
+                this.cover.style.top=pos.y+'px'
+                this.ctx.clearRect(0,0,this.imgwrap.offsetWidth,this.imgwrap.offsetHeight);
+                let startX=pos.x-(imgwrap.left-document.documentElement.scrollLeft),
+                startY=pos.y-(imgwrap.top-document.documentElement.scrollTop)
+                this.ctx.drawImage(this.img,startX*this.imgTimesX,startY*this.imgTimesY,this.img.width*this.rectTimesX,this.img.height*this.rectTimesY,0,0,this.imgbox.offsetWidth,this.imgbox.offsetHeight);
                 
             },
             mouseover(e){
@@ -148,7 +188,8 @@
                 }
                 this.cover.style.display='none'
                 this.canvas.style.display='none'
-            }
+            },
+            
         }
     }
 </script>
@@ -161,17 +202,17 @@
         justify-content: center;
         align-items: center;
         overflow: hidden;
-        position: static;
+        position: relative;
         img{
             width: 100%;
         };
         .mouse-cover{
-            position: absolute;
+            position: fixed;
             background-color: rgba(0,0,0,0.5);
             cursor:move
         };
         .mouse-cover-canvas{
-            position:absolute;
+            position:fixed;
             left:100%;
             top:0;
             width:100%;
