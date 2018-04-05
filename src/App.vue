@@ -12,6 +12,10 @@
       <div class="pic-box">
         <pic-zoom url="static/imac2_thumb.jpg" big-url="static/imac2.jpg" :scale="3" ></pic-zoom>
       </div>
+      <p>显示旋转按钮：<span style="color:#ff6600">:show-eidt="true"</span></p>
+      <div class="pic-box">
+        <pic-zoom url="static/imac2.jpg" :scale="3" :show-eidt="true"></pic-zoom>
+      </div>
   </div>
 </template>
 

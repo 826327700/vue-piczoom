@@ -1,7 +1,11 @@
 <template>
-    <div class="magnifier-box" :ref="id" @mousemove="mousemove" @mouseover="mouseover" @mouseleave="mouseleave">
-        <img :src="url" alt="">
+    <div class="magnifier-box" :class="vertical?'vertical':''" :ref="id" @mousemove="mousemove" @mouseover="mouseover" @mouseleave="mouseleave">
+        <img v-show="showImg" :src="imgUrl" alt="">
         <div class="mouse-cover"></div>
+        <div class="edit-wrap" v-if="showEidt">
+            <span class="rotate-left" @click="rotate('left')"></span>
+            <span class="rotate-right" @click="rotate('right')"></span>
+        </div>
     </div>
 </template>
 
@@ -23,6 +27,10 @@
             scroll:{
                 type:Boolean,
                 default:false
+            },
+            showEidt:{
+                type:Boolean,
+                default:false
             }
         },
         data () {
@@ -31,6 +39,10 @@
                 cover:null,
                 imgbox:null,
                 imgwrap:null,
+                orginUrl:null,
+                bigImgUrl:null,
+                bigOrginUrl:null,
+                imgUrl:null,
                 img:null,
                 canvas:null,
                 ctx:null,
@@ -38,7 +50,11 @@
                 rectTimesY:0,
                 imgTimesX:0,
                 imgTimesY:0,
-                init:false
+                init:false,
+                step:0,
+                bigStep:0,
+                vertical:false,
+                showImg:true
             }
         },
         created(){
@@ -49,14 +65,18 @@
                 str += $chars.charAt(Math.floor(Math.random() * maxPos));
         　　}
             this.id=str
+            this.imgUrl=this.url
+            this.orginUrl=this.url
+            this.bigImgUrl=this.bigUrl
+            this.bigOrginUrl=this.bigUrl
         },
         mounted(){
             this.$nextTick(()=>{
-                this.initBox()
+                this.initTime()
             })
         },
         methods: {
-            initBox(){
+            initTime(){
                 let box=this.$refs[this.id]
                 this.imgbox=box
                 this.cover=box.querySelector('.mouse-cover')
@@ -66,8 +86,8 @@
                 this.cover.style.top='-100%'
                 this.imgwrap=box.querySelector('img')
                 let imgsrc;
-                if(this.bigUrl){
-                    imgsrc=this.bigUrl
+                if(this.bigImgUrl){
+                    imgsrc=this.bigImgUrl
                 }else{
                     imgsrc=this.imgwrap.src
                 }
@@ -78,9 +98,9 @@
                     this.rectTimesY=this.cover.offsetHeight/this.imgwrap.offsetHeight
                     this.imgTimesX=this.img.width/this.imgwrap.offsetWidth,
                     this.imgTimesY=this.img.height/this.imgwrap.offsetHeight
+                    this.vertical=this.img.width<this.img.height
                     this.init=true
                 }
-
                 if(!this.canvas){
                     this.canvas=document.createElement('canvas')
                     this.canvas.className='mouse-cover-canvas'
@@ -95,6 +115,29 @@
                     document.body.append(this.canvas)
                 }
                 this.ctx=this.canvas.getContext("2d");
+            },
+            initBox(){
+                this.showImg=false
+                this.canvas.style.display='none'
+                let box=this.$refs[this.id]
+                let imgsrc;
+                if(this.bigImgUrl){
+                    imgsrc=this.bigImgUrl
+                }else{
+                    imgsrc=this.imgUrl
+                    
+                }
+                this.img=new Image()
+                this.img.src=imgsrc
+                this.img.onload=()=>{
+                    this.vertical=this.img.width<this.img.height
+                    this.showImg=true
+                    let thumb=box.querySelector('img')
+                    setTimeout(() => {
+                        this.rectTimesX=this.cover.offsetWidth/box.querySelector('img').offsetWidth,
+                        this.rectTimesY=this.cover.offsetHeight/box.querySelector('img').offsetHeight
+                    }, 20);
+                }
                 
             },
             mousemove(e){
@@ -189,7 +232,89 @@
                 this.cover.style.display='none'
                 this.canvas.style.display='none'
             },
-            
+            rotate(direction){
+                var orginImg=new Image()
+                orginImg.src=this.orginUrl
+                orginImg.onload=()=>{
+                    this.rotateImg(orginImg,direction,this.step)
+                }
+                if(this.bigOrginUrl){
+                    var bigOrginImg=new Image()
+                    bigOrginImg.src=this.bigOrginUrl
+                    bigOrginImg.onload=()=>{
+                        this.rotateImg(bigOrginImg,direction,this.bigStep,true)
+                    }
+                }
+                
+            },
+            rotateImg(img,direction,step,isBig=false){
+                var min_step = 0;
+                var max_step = 3;
+                console.log(img)
+                if (img == null) return;
+                //img的高度和宽度不能在img元素隐藏后获取，否则会出错    
+                var height = img.height;
+                var width = img.width;
+                
+                if (step == null) {
+                    step = min_step;
+                }
+                if (direction == 'right') {
+                    step++;
+                    //旋转到原位置，即超过最大值    
+                    step > max_step && (step = min_step);
+                } else {
+                    step--;
+                    step < min_step && (step = max_step);
+                }   
+                var canvas = document.createElement('canvas')  
+                
+                //旋转角度以弧度值为参数    
+                var degree = step * 90 * Math.PI / 180;
+                var ctx = canvas.getContext('2d');
+                canvas.width = height;
+                canvas.height = width;
+                ctx.rotate(degree);
+                ctx.drawImage(img, 0, -height);
+                switch (step) {
+                    case 0:
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0);
+                        break;
+                    case 1:
+                        canvas.width = height;
+                        canvas.height = width;
+                        ctx.rotate(degree);
+                        ctx.drawImage(img, 0, -height);
+                        break;
+                    case 2:
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.rotate(degree);
+                        ctx.drawImage(img, -width, -height);
+                        break;
+                    case 3:
+                        canvas.width = height;
+                        canvas.height = width;
+                        ctx.rotate(degree);
+                        ctx.drawImage(img, -width, 0);
+                        break;
+                }
+                var newImg=canvas.toDataURL()
+                
+                if(isBig){
+                    this.bigImgUrl=newImg
+                    this.bigStep=step
+                    this.initBox()
+                }else{
+                    this.imgUrl=newImg
+                    this.step=step
+                    this.$nextTick(()=>{
+                        this.initBox()
+                    })
+                }
+            },
         }
     }
 </script>
@@ -203,6 +328,38 @@
         align-items: center;
         overflow: hidden;
         position: relative;
+        .edit-wrap{
+            position: absolute;
+            top: 5px;
+            right: 0;
+            z-index: 9999999;
+            background: rgba(0,0,0,0.4);
+            padding: 5px 15px 0 15px;
+            border-radius: 15px;
+            .rotate-left{
+                display: inline-block;
+                cursor: pointer;
+                width: 16px;
+                height: 16px;
+                background: url(../rotate.png);
+                background-size: 100% 100%;
+                -moz-transform:scaleX(-1);
+                -webkit-transform:scaleX(-1);
+                -o-transform:scaleX(-1);
+                transform:scaleX(-1);
+                /*IE*/
+                filter:FlipH;
+            }
+            .rotate-right{
+                margin-left: 10px;
+                cursor: pointer;
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                background: url(../rotate.png);
+                background-size: 100% 100%;
+            }
+        }
         img{
             width: 100%;
         };
@@ -217,6 +374,12 @@
             top:0;
             width:100%;
             height:100%;
+        }
+        &.vertical{
+            img{
+                height: 100%;
+                width: auto
+            }
         }
     }
 </style>
