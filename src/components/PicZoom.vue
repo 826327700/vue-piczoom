@@ -70,6 +70,18 @@
             this.bigImgUrl=this.bigUrl
             this.bigOrginUrl=this.bigUrl
         },
+        watch:{
+            url:function(val){
+                this.imgUrl=val
+                this.orginUrl=val
+                this.initTime()
+            },
+            bigUrl:function(){
+                this.bigImgUrl=bigUrl
+                this.bigOrginUrl=bigUrl
+                this.initTime()
+            }
+        },
         mounted(){
             this.$nextTick(()=>{
                 this.initTime()
@@ -77,6 +89,7 @@
         },
         methods: {
             initTime(){
+                this.init=false
                 let box=this.$refs[this.id]
                 this.imgbox=box
                 this.cover=box.querySelector('.mouse-cover')
@@ -89,32 +102,36 @@
                 if(this.bigImgUrl){
                     imgsrc=this.bigImgUrl
                 }else{
-                    imgsrc=this.imgwrap.src
+                    imgsrc=this.imgUrl
                 }
+                
                 this.img=new Image()
                 this.img.src=imgsrc
                 this.img.onload=()=>{
-                    this.rectTimesX=this.cover.offsetWidth/this.imgwrap.offsetWidth,
-                    this.rectTimesY=this.cover.offsetHeight/this.imgwrap.offsetHeight
+                    this.rectTimesX=(this.imgbox.offsetWidth/this.scale)/this.imgwrap.offsetWidth,
+                    this.rectTimesY=(this.imgbox.offsetHeight/this.scale)/this.imgwrap.offsetHeight
                     this.imgTimesX=this.img.width/this.imgwrap.offsetWidth,
                     this.imgTimesY=this.img.height/this.imgwrap.offsetHeight
                     this.vertical=this.img.width<this.img.height
                     this.init=true
                 }
-                if(!this.canvas){
-                    this.canvas=document.createElement('canvas')
-                    this.canvas.className='mouse-cover-canvas'
-                    this.canvas.style.position='absolute'
-                    this.canvas.style.left=this.imgbox.offsetLeft+this.imgbox.offsetWidth+10+'px'
-                    this.canvas.style.top=this.imgbox.offsetTop+'px'
-                    this.canvas.style.border='1px solid #eee'
-                    this.canvas.style.zIndex='99999'
-                    this.canvas.height=this.imgbox.offsetHeight
-                    this.canvas.width=this.imgbox.offsetWidth
-                    this.canvas.style.display='none'
-                    document.body.append(this.canvas)
+                if(this.canvas){
+                    this.canvas.parentNode.removeChild(this.canvas);
+                    this.canvas=null
                 }
+                this.canvas=document.createElement('canvas')
+                this.canvas.className='mouse-cover-canvas'
+                this.canvas.style.position='absolute'
+                this.canvas.style.left=this.imgbox.offsetLeft+this.imgbox.offsetWidth+10+'px'
+                this.canvas.style.top=this.imgbox.offsetTop+'px'
+                this.canvas.style.border='1px solid #eee'
+                this.canvas.style.zIndex='99999'
+                this.canvas.height=this.imgbox.offsetHeight
+                this.canvas.width=this.imgbox.offsetWidth
+                this.canvas.style.display='none'
+                document.body.append(this.canvas)
                 this.ctx=this.canvas.getContext("2d");
+                this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
             },
             initBox(){
                 this.showImg=false
@@ -134,8 +151,8 @@
                     this.showImg=true
                     let thumb=box.querySelector('img')
                     setTimeout(() => {
-                        this.rectTimesX=this.cover.offsetWidth/box.querySelector('img').offsetWidth,
-                        this.rectTimesY=this.cover.offsetHeight/box.querySelector('img').offsetHeight
+                        this.rectTimesX=(this.imgbox.offsetWidth/this.scale)/box.querySelector('img').offsetWidth,
+                        this.rectTimesY=(this.imgbox.offsetHeight/this.scale)/box.querySelector('img').offsetHeight
                     }, 20);
                 }
                 
@@ -145,7 +162,6 @@
                     return false
                 }
                 let _this=this
-
                 //获取实际的offset
                 function offset(curEle){
                     var totalLeft = null,totalTop = null,par = curEle.offsetParent;
@@ -234,12 +250,14 @@
             },
             rotate(direction){
                 var orginImg=new Image()
+                orginImg.crossOrigin = "Anonymous";
                 orginImg.src=this.orginUrl
                 orginImg.onload=()=>{
                     this.rotateImg(orginImg,direction,this.step)
                 }
                 if(this.bigOrginUrl){
                     var bigOrginImg=new Image()
+                    orginImg.crossOrigin = "Anonymous";
                     bigOrginImg.src=this.bigOrginUrl
                     bigOrginImg.onload=()=>{
                         this.rotateImg(bigOrginImg,direction,this.bigStep,true)
@@ -250,7 +268,6 @@
             rotateImg(img,direction,step,isBig=false){
                 var min_step = 0;
                 var max_step = 3;
-                console.log(img)
                 if (img == null) return;
                 //img的高度和宽度不能在img元素隐藏后获取，否则会出错    
                 var height = img.height;

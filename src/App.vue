@@ -4,6 +4,7 @@
       <div class="pic-box">
         <pic-zoom url="static/imac2.jpg" :scale="3"></pic-zoom>
       </div>
+      
       <p>配置放大时可滚动页面(滚轮)：<span style="color:#ff6600">:scroll="true"</span></p>
       <div class="pic-box">
         <pic-zoom url="static/imac2.jpg" :scale="3" :scroll="true"></pic-zoom>
@@ -14,8 +15,9 @@
       </div>
       <p>显示旋转按钮：<span style="color:#ff6600">:show-eidt="true"</span></p>
       <div class="pic-box">
-        <pic-zoom url="static/imac2.jpg" :scale="3" :show-eidt="true"></pic-zoom>
+        <pic-zoom :url="url" :scale="3" :show-eidt="true"></pic-zoom>
       </div>
+      <button @click="changeUrl">动态更改url</button>
   </div>
 </template>
 
@@ -26,6 +28,16 @@ export default {
   name: 'App',
   components: {
     PicZoom
+  },
+  data(){
+    return{
+      url:"static/imac2.jpg"
+    }
+  },
+  methods:{
+    changeUrl(){
+      this.url="http://imgsrc.baidu.com/imgad/pic/item/3801213fb80e7beca9004ec5252eb9389b506b38.jpg"
+    }
   }
 }
 </script>
@@ -37,6 +49,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   margin-top: 60px;
+  padding-bottom: 100px;
 }
 .pic-box{
   width:500px;
